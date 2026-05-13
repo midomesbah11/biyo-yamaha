@@ -68,10 +68,11 @@ const Hero = () => {
                   boxShadow: "0 0 25px rgba(220, 38, 38, 0.8)"
                 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-full px-6 md:px-10 py-3 md:py-5 bg-red-600 text-white font-bold rounded-sm text-base md:text-xl transition-all flex items-center justify-center gap-3 uppercase tracking-wider group not-italic"
+                className="w-full px-6 md:px-10 py-3 md:py-5 bg-red-600 text-white font-bold rounded-sm text-base md:text-xl transition-all flex items-center justify-center gap-3 group not-italic"
+                dir="ltr"
               >
-                <span>Acheter Maintenant</span>
-                <ShoppingBag className="group-hover:rotate-12 transition-transform" size={20} />
+                <ShoppingBag className="group-hover:-rotate-12 transition-transform" size={24} />
+                <span className="font-['Cairo'] font-black text-xl md:text-2xl pt-1">اشتري الآن</span>
               </motion.button>
             </Link>
             

@@ -16,9 +16,9 @@ const ProductCard = ({ product }) => {
         </div>
       )}
 
-      {product.stock === 0 && (
+      {Number(product.stock) <= 0 && (
         <div className="absolute top-4 right-4 z-20 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-sm uppercase tracking-tighter shadow-lg border border-white/20">
-          Rupture de Stock
+          نفذت الكمية
         </div>
       )}
 
@@ -29,21 +29,22 @@ const ProductCard = ({ product }) => {
         <motion.img 
           src={product.images?.[0] || product.image}
           alt={product.name}
-          className={`w-full h-full object-contain z-10 relative ${product.stock === 0 ? 'grayscale opacity-40 contrast-75' : ''}`}
-          whileHover={product.stock > 0 ? { scale: 1.1, rotate: 5 } : {}}
+          className={`w-full h-full object-contain z-10 relative ${Number(product.stock) <= 0 ? 'grayscale opacity-40 contrast-75' : ''}`}
+          whileHover={Number(product.stock) > 0 ? { scale: 1.1, rotate: 5 } : {}}
           transition={{ type: "spring", stiffness: 200, damping: 10 }}
           onError={(e) => {
             e.target.style.display = 'none';
             e.target.nextSibling.style.display = 'flex';
           }}
         />
-        {product.stock === 0 && (
+        {Number(product.stock) <= 0 && (
            <div className="absolute inset-0 z-10 bg-black/40 flex items-center justify-center">
               <div className="border-2 border-white/10 px-4 py-1 rounded-full backdrop-blur-sm">
-                <span className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em]">Non Disponible</span>
+                <span className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em]">غير متوفر حالياً</span>
               </div>
            </div>
         )}
+
         {/* Placeholder Fallback */}
         <div className="hidden w-48 h-48 bg-gradient-to-tr from-gray-700 to-gray-300 rounded-lg shadow-2xl z-10 relative items-center justify-center text-center p-2">
           <span className="text-gray-400 text-sm font-bold uppercase tracking-wider">{product.category}</span>

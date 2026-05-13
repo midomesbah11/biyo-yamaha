@@ -40,17 +40,16 @@ const Navbar = () => {
                 <Link
                   key={link.name}
                   to={link.href}
-                  className={`font-bold transition-colors duration-300 text-sm uppercase tracking-wider ${
-                    link.name === 'Motos Risol' 
-                    ? 'text-blue-500 hover:text-blue-400' 
-                    : 'text-white hover:text-red-600'
-                  }`}
+                  className={`font-bold transition-colors duration-300 text-sm uppercase tracking-wider ${link.name === 'Motos Risol'
+                      ? 'text-blue-500 hover:text-blue-400'
+                      : 'text-white hover:text-red-600'
+                    }`}
                 >
                   {link.name}
                 </Link>
               ))}
             </div>
-            
+
             <button className="text-white hover:text-red-600 transition-colors duration-300 relative group ml-4">
               <ShoppingCart size={22} />
               <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full group-hover:scale-110 transition-transform">
@@ -73,7 +72,7 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="lg:hidden glass-panel absolute w-full"
@@ -84,11 +83,10 @@ const Navbar = () => {
                 key={link.name}
                 to={link.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                  link.name === 'Motos Risol' 
-                  ? 'text-blue-500 hover:bg-blue-600/10' 
-                  : 'text-white hover:text-red-600 hover:bg-white/5'
-                }`}
+                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${link.name === 'Motos Risol'
+                    ? 'text-blue-500 hover:bg-blue-600/10'
+                    : 'text-white hover:text-red-600 hover:bg-white/5'
+                  }`}
               >
                 {link.name}
               </Link>

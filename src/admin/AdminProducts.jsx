@@ -17,7 +17,11 @@ export default function AdminProducts() {
     stock: ''
   });
 
-  const openWidget = () => {
+  const handleImageUpload = async (e) => {
+    const fileInput = e.target;
+    const file = fileInput.files[0];
+    if (!file) return;
+
     const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
     
@@ -26,57 +30,40 @@ export default function AdminProducts() {
       return;
     }
 
-    if (window.cloudinary) {
-      const widget = window.cloudinary.createUploadWidget(
-        {
-          cloudName: cloudName,
-          uploadPreset: uploadPreset,
-          sources: ['local', 'camera', 'google_drive'],
-          multiple: true,
-          clientAllowedFormats: ['webp', 'jpg', 'png', 'heic', 'avif'],
-          maxImageWidth: 1200,
-          styles: {
-            palette: {
-              window: "#111111",
-              windowBorder: "#27272a",
-              tabIcon: "#ef4444",
-              menuIcons: "#ffffff",
-              textDark: "#ffffff",
-              textLight: "#a1a1aa",
-              link: "#ef4444",
-              action: "#ef4444",
-              inactiveTabIcon: "#71717a",
-              error: "#ef4444",
-              inProgress: "#ef4444",
-              complete: "#22c55e",
-              sourceBg: "#000000"
-            }
-          }
-        },
-        (error, result) => {
-          if (!error && result && result.event === "success") {
-            let optimizedUrl = result.info.secure_url;
-            
-            // إجبار Cloudinary على التحويل إلى WebP بأفضل جودة وألوان صحيحة
-            const transformations = "f_webp,q_auto:best,cs_srgb,w_1200,c_limit";
-            
-            const parts = optimizedUrl.split('/upload/');
-            if (parts.length === 2) {
-              // تغيير الامتداد الأصلي (مثل .heic أو .png) إلى .webp
-              let pathWithWebp = parts[1].replace(/\.[^/.]+$/, ".webp");
-              optimizedUrl = `${parts[0]}/upload/${transformations}/${pathWithWebp}`;
-            }
+    const formDataToUpload = new FormData();
+    formDataToUpload.append('file', file);
+    formDataToUpload.append('upload_preset', uploadPreset);
 
-            setFormData(prev => ({ 
-              ...prev, 
-              images: [...prev.images, optimizedUrl] 
-            }));
-          }
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: formDataToUpload
+      });
+      
+      const result = await response.json();
+      if (response.ok && result.secure_url) {
+        let optimizedUrl = result.secure_url;
+        const transformations = "f_webp,q_auto:best,cs_srgb,w_1200,c_limit";
+        
+        const parts = optimizedUrl.split('/upload/');
+        if (parts.length === 2) {
+          let pathWithWebp = parts[1].replace(/\.[^/.]+$/, ".webp");
+          optimizedUrl = `${parts[0]}/upload/${transformations}/${pathWithWebp}`;
         }
-      );
-      widget.open();
-    } else {
-      alert("Erreur: Le script Cloudinary n'est pas chargé. Vérifiez votre connexion internet.");
+
+        setFormData(prev => ({ 
+          ...prev, 
+          images: [...prev.images, optimizedUrl] 
+        }));
+      } else {
+        console.error("Cloudinary error:", result);
+        alert("Erreur: " + (result.error?.message || "Le téléchargement a échoué."));
+      }
+    } catch (error) {
+      console.error("Upload exception:", error);
+      alert("Erreur de connexion lors du téléchargement.");
+    } finally {
+      fileInput.value = '';
     }
   };
 
@@ -84,7 +71,8 @@ export default function AdminProducts() {
     e.preventDefault();
     const productData = {
       ...formData,
-      slug: formData.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-'),
+      subCategory: formData.category === 'Accessoires' ? formData.subCategory : '',
+      slug: formData.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''),
       price: formData.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
       stock: parseInt(formData.stock) || 0
     };
@@ -102,12 +90,12 @@ export default function AdminProducts() {
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      price: product.price.replace(/,/g, '').replace(' DA', '').trim(),
+      price: product.price ? product.price.toString().replace(/,/g, '').replace(' DA', '').trim() : '',
       description: product.description,
       category: product.category,
       subCategory: product.subCategory || '',
       images: product.images || (product.image ? [product.image] : []),
-      stock: product.stock.toString()
+      stock: product.stock !== undefined && product.stock !== null ? product.stock.toString() : ''
     });
     setShowAddForm(true);
   };
@@ -227,7 +215,7 @@ export default function AdminProducts() {
                   )}
 
                   <div>
-                    <label className="block text-zinc-400 text-sm font-medium mb-2">Images du produit (Cloudinary Widget)</label>
+                    <label className="block text-zinc-400 text-sm font-medium mb-2">Images du produit (Upload direct)</label>
                     
                     {formData.images && formData.images.length > 0 ? (
                       <div className="space-y-4">
@@ -248,12 +236,12 @@ export default function AdminProducts() {
                           ))}
                           
                           {/* Add more images button */}
-                          <div 
-                            onClick={openWidget}
-                            className="border-2 border-dashed border-zinc-800 rounded-xl hover:border-red-600 hover:bg-red-950/10 cursor-pointer flex items-center justify-center bg-[#111111] h-32 transition-colors group"
+                          <label 
+                            className="border-2 border-dashed border-zinc-800 rounded-xl hover:border-red-600 hover:bg-red-950/10 cursor-pointer flex items-center justify-center bg-[#111111] h-32 transition-colors group relative"
                           >
+                            <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={handleImageUpload} />
                             <Plus size={24} className="text-zinc-500 group-hover:text-red-500 transition-colors" />
-                          </div>
+                          </label>
                         </div>
                         
                         <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-emerald-400 text-xs flex items-center gap-2">
@@ -262,16 +250,16 @@ export default function AdminProducts() {
                         </div>
                       </div>
                     ) : (
-                      <div 
-                        onClick={openWidget}
-                        className="border-2 border-dashed border-zinc-800 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:border-red-600 hover:bg-red-950/10 transition-all cursor-pointer bg-[#111111] group"
+                      <label 
+                        className="border-2 border-dashed border-zinc-800 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:border-red-600 hover:bg-red-950/10 transition-all cursor-pointer bg-[#111111] group relative"
                       >
+                        <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={handleImageUpload} />
                         <div className="w-16 h-16 bg-zinc-900 group-hover:bg-red-600/20 rounded-full flex items-center justify-center mb-4 transition-colors">
                           <Upload size={28} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
                         </div>
-                        <h4 className="text-white font-bold text-lg mb-1 group-hover:text-red-400 transition-colors">Ouvrir Cloudinary Widget</h4>
-                        <p className="text-zinc-500 text-sm">Supporte PC, Mobile, et Google Drive</p>
-                      </div>
+                        <h4 className="text-white font-bold text-lg mb-1 group-hover:text-red-400 transition-colors">Sélectionner une image</h4>
+                        <p className="text-zinc-500 text-sm">Upload direct vers Cloudinary</p>
+                      </label>
                     )}
                   </div>
                 </div>
@@ -290,71 +278,130 @@ export default function AdminProducts() {
         </div>
       )}
 
-      <div className="bg-black border border-zinc-900 rounded-2xl overflow-x-auto shadow-2xl">
-        <table className="w-full text-left border-collapse min-w-[600px]">
-          <thead>
-            <tr className="bg-zinc-900 border-b border-zinc-800">
-              <th className="py-4 px-6 text-zinc-400 font-medium text-sm">Nom du Produit</th>
-              <th className="py-4 px-6 text-zinc-400 font-medium text-sm">Catégorie</th>
-              <th className="py-4 px-6 text-zinc-400 font-medium text-sm">Prix</th>
-              <th className="py-4 px-6 text-zinc-400 font-medium text-sm">Stock</th>
-              <th className="py-4 px-6 text-zinc-400 font-medium text-sm text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => (
-              <tr key={product.id} className="border-b border-zinc-900/50 hover:bg-zinc-900/30 transition-colors group">
-                <td className="py-4 px-6 text-white font-medium flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-zinc-900 border border-zinc-800 rounded-xl flex items-center justify-center overflow-hidden">
-                    {product.images?.[0] || product.image ? (
-                      <img src={(product.images?.[0] || product.image).split('?')[0]} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <ImageIcon size={20} className="text-zinc-600" />
-                    )}
-                  </div>
-                  <span className="group-hover:text-red-400 transition-colors">{product.name}</span>
-                </td>
-                <td className="py-4 px-6 text-zinc-300">
-                  <div className="flex items-center space-x-2">
-                    <span>{product.category}</span>
+      <div className="bg-black border border-zinc-900 rounded-2xl shadow-2xl overflow-hidden">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-zinc-900 border-b border-zinc-800">
+                <th className="py-4 px-6 text-zinc-400 font-medium text-sm">Nom du Produit</th>
+                <th className="py-4 px-6 text-zinc-400 font-medium text-sm">Catégorie</th>
+                <th className="py-4 px-6 text-zinc-400 font-medium text-sm">Prix</th>
+                <th className="py-4 px-6 text-zinc-400 font-medium text-sm">Stock</th>
+                <th className="py-4 px-6 text-zinc-400 font-medium text-sm text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product) => (
+                <tr key={product.id} className="border-b border-zinc-900/50 hover:bg-zinc-900/30 transition-colors group">
+                  <td className="py-4 px-6 text-white font-medium flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-zinc-900 border border-zinc-800 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
+                      {product.images?.[0] || product.image ? (
+                        <img src={(product.images?.[0] || product.image).split('?')[0]} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon size={20} className="text-zinc-600" />
+                      )}
+                    </div>
+                    <span className="group-hover:text-red-400 transition-colors truncate max-w-[200px]">{product.name}</span>
+                  </td>
+                  <td className="py-4 px-6 text-zinc-300">
+                    <div className="flex items-center space-x-2">
+                      <span className="whitespace-nowrap">{product.category}</span>
+                      {product.subCategory && (
+                        <span className="text-red-500 bg-red-500/10 border border-red-500/20 text-[10px] px-1.5 py-0.5 rounded-md font-medium whitespace-nowrap">
+                          {product.subCategory}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-4 px-6 text-white font-semibold whitespace-nowrap">{product.price} DA</td>
+                  <td className="py-4 px-6">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
+                      product.stock === 0 ? 'bg-red-500/20 text-red-500' : 
+                      product.stock < 3 ? 'bg-amber-500/20 text-amber-500' : 
+                      'bg-emerald-500/20 text-emerald-500'
+                    }`}>
+                      {product.stock === 0 ? 'Rupture' : `${product.stock} Unités`}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6 text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <button 
+                        onClick={() => handleEdit(product)}
+                        className="p-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(product.id)}
+                        className="p-2.5 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-zinc-900">
+          {products.map((product) => (
+            <div key={product.id} className="p-4 flex flex-col gap-4 bg-black/50">
+              <div className="flex items-start gap-4">
+                <div className="w-20 h-20 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-center overflow-hidden shrink-0">
+                  {product.images?.[0] || product.image ? (
+                    <img src={(product.images?.[0] || product.image).split('?')[0]} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <ImageIcon size={24} className="text-zinc-600" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-white font-bold text-lg leading-tight truncate">{product.name}</h4>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <span className="text-zinc-400 text-sm">{product.category}</span>
                     {product.subCategory && (
-                      <span className="text-red-500 bg-red-500/10 border border-red-500/20 text-xs px-2 py-1 rounded-md font-medium">
+                      <span className="text-red-500 bg-red-500/10 border border-red-500/20 text-[10px] px-1.5 py-0.5 rounded-md font-medium">
                         {product.subCategory}
                       </span>
                     )}
                   </div>
-                </td>
-                <td className="py-4 px-6 text-white font-semibold">{product.price} {product.price?.toString().includes('DA') ? '' : 'DA'}</td>
-                <td className="py-4 px-6">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                    product.stock === 0 ? 'bg-red-500/20 text-red-500' : 
-                    product.stock < 3 ? 'bg-amber-500/20 text-amber-500' : 
-                    'bg-emerald-500/20 text-emerald-500'
-                  }`}>
-                    {product.stock === 0 ? 'Rupture' : `${product.stock} Unités`}
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right">
-                  <div className="flex items-center justify-end space-x-2">
-                    <button 
-                      onClick={() => handleEdit(product)}
-                      className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all"
-                    >
-                      <Edit2 size={18} />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(product.id)}
-                      className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-red-500 font-black text-lg">{product.price} DA</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                      product.stock === 0 ? 'bg-red-500/20 text-red-500' : 
+                      product.stock < 3 ? 'bg-amber-500/20 text-amber-500' : 
+                      'bg-emerald-500/20 text-emerald-500'
+                    }`}>
+                      {product.stock === 0 ? 'Rupture' : `${product.stock} en stock`}
+                    </span>
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <button 
+                  onClick={() => handleEdit(product)}
+                  className="flex items-center justify-center space-x-2 py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl transition-all border border-zinc-800 font-bold text-sm"
+                >
+                  <Edit2 size={16} />
+                  <span>Modifier</span>
+                </button>
+                <button 
+                  onClick={() => handleDelete(product.id)}
+                  className="flex items-center justify-center space-x-2 py-3 bg-red-600/10 hover:bg-red-600/20 text-red-500 rounded-xl transition-all border border-red-600/20 font-bold text-sm"
+                >
+                  <Trash2 size={16} />
+                  <span>Supprimer</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
+
     </div>
   );
 }
