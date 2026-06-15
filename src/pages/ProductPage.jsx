@@ -212,13 +212,13 @@ export default function ProductPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-32 animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-20 animate-in fade-in duration-500">
       <Breadcrumbs />
       
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Left: Images */}
         <div className="space-y-6">
-          <div className="overflow-hidden rounded-3xl group border border-zinc-800 relative bg-[#111111] aspect-square flex items-center justify-center p-8 shadow-2xl">
+          <div className="overflow-hidden rounded-3xl group border border-zinc-800 relative bg-[#111111] aspect-square flex items-center justify-center shadow-2xl">
             {thumbnails.length > 1 && (
               <>
                 <button onClick={handlePrevImg} className="absolute left-4 z-10 p-2 bg-black/50 hover:bg-black text-white rounded-full transition-all border border-white/10">
@@ -232,7 +232,7 @@ export default function ProductPage() {
             <img 
               src={selectedImage} 
               alt={product.name} 
-              className={`w-full h-full object-contain transition-all duration-500 ease-out ${Number(product.stock) <= 0 ? 'grayscale contrast-75 opacity-50' : ''}`}
+              className={`w-full h-full object-cover transition-all duration-500 ease-out ${Number(product.stock) <= 0 ? 'grayscale contrast-75 opacity-50' : ''}`}
             />
             {Number(product.stock) <= 0 && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -248,13 +248,13 @@ export default function ProductPage() {
                 <button 
                   key={idx} 
                   onClick={() => setCurrentImgIdx(idx)}
-                  className={`w-20 h-20 md:w-24 md:h-24 rounded-2xl border-2 overflow-hidden flex-shrink-0 bg-[#111111] p-2 transition-all ${
+                  className={`w-20 h-20 md:w-24 md:h-24 rounded-2xl border-2 overflow-hidden flex-shrink-0 bg-[#111111] transition-all ${
                     currentImgIdx === idx 
                       ? 'border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.3)] scale-105' 
                       : 'border-zinc-800 hover:border-zinc-500 opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <img src={img.split('?')[0]} alt={`Vue ${idx + 1}`} className="w-full h-full object-contain" />
+                  <img src={img.split('?')[0]} alt={`Vue ${idx + 1}`} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

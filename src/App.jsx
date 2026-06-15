@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Intro from './components/Intro';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import CategoryPage from './pages/CategoryPage';
 import AccessoriesPage from './pages/AccessoriesPage';
@@ -78,6 +79,7 @@ function AppContent() {
               <Route path="/:categorySlug" element={<CategoryPage />} />
             </Routes>
           </main>
+          <Footer />
         </>
       )}
     </div>

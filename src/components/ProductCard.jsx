@@ -23,13 +23,13 @@ const ProductCard = ({ product }) => {
       )}
 
       {/* Product Image Area */}
-      <div className="relative h-80 bg-black p-6 flex items-center justify-center overflow-hidden">
+      <div className="relative h-80 bg-black flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-500 via-black to-black"></div>
         {/* Product Image */}
         <motion.img 
           src={product.images?.[0] || product.image}
           alt={product.name}
-          className={`w-full h-full object-contain z-10 relative ${Number(product.stock) <= 0 ? 'grayscale opacity-40 contrast-75' : ''}`}
+          className={`w-full h-full object-cover z-10 relative ${Number(product.stock) <= 0 ? 'grayscale opacity-40 contrast-75' : ''}`}
           whileHover={Number(product.stock) > 0 ? { scale: 1.1, rotate: 5 } : {}}
           transition={{ type: "spring", stiffness: 200, damping: 10 }}
           onError={(e) => {

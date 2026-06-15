@@ -14,7 +14,7 @@ const subCategories = [
 
 const AccessoriesPage = () => {
   const [activeSub, setActiveSub] = useState('Tout');
-  const { products } = useContext(StoreContext);
+  const { products, isLoading } = useContext(StoreContext);
 
   const filteredProducts = products.filter(p => 
     p.category === 'Accessoires' && (activeSub === 'Tout' || p.subCategory === activeSub)
@@ -108,30 +108,38 @@ const AccessoriesPage = () => {
           })}
         </div>
 
-        <motion.div 
-          layout
-          className="grid grid-cols-2 lg:grid-cols-4 gap-6"
-        >
-          <AnimatePresence mode="popLayout">
-            {filteredProducts.map((product) => (
-              <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
-                key={product.id}
-              >
-                <ProductCard product={product} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
-
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-20 text-gray-500">
-            Aucun produit disponible dans cette sous-catégorie.
+        {isLoading ? (
+          <div className="flex justify-center items-center py-32">
+            <div className="w-16 h-16 border-4 border-zinc-800 border-t-red-600 rounded-full animate-spin"></div>
           </div>
+        ) : (
+          <>
+            <motion.div 
+              layout
+              className="grid grid-cols-2 lg:grid-cols-4 gap-6"
+            >
+              <AnimatePresence mode="popLayout">
+                {filteredProducts.map((product) => (
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.3 }}
+                    key={product.id}
+                  >
+                    <ProductCard product={product} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+
+            {filteredProducts.length === 0 && (
+              <div className="text-center py-20 text-gray-500">
+                Aucun produit disponible dans cette sous-catégorie.
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

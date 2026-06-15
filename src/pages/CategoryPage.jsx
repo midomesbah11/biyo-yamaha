@@ -8,7 +8,7 @@ import Breadcrumbs from '../components/Breadcrumbs';
 
 const CategoryPage = () => {
   const { categorySlug } = useParams();
-  const { products } = useContext(StoreContext);
+  const { products, isLoading } = useContext(StoreContext);
   
   const category = categories.find(c => c.slug === categorySlug);
   const filteredProducts = products.filter(p => p.slug === categorySlug);
@@ -85,22 +85,30 @@ const CategoryPage = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredProducts.map((product) => (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              key={product.id}
-            >
-              <ProductCard product={product} />
-            </motion.div>
-          ))}
-        </div>
-
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-20 text-gray-500">
-            Aucun produit disponible dans cette catégorie pour le moment.
+        {isLoading ? (
+          <div className="flex justify-center items-center py-32">
+             <div className="w-16 h-16 border-4 border-zinc-800 border-t-red-600 rounded-full animate-spin"></div>
           </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {filteredProducts.map((product) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  key={product.id}
+                >
+                  <ProductCard product={product} />
+                </motion.div>
+              ))}
+            </div>
+
+            {filteredProducts.length === 0 && (
+              <div className="text-center py-20 text-gray-500">
+                Aucun produit disponible dans cette catégorie pour le moment.
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
